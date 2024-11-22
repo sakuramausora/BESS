@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>How an energy storage works</title>
+  <title>Energy System Animation</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -25,65 +25,29 @@
       max-width: 800px;
       height: 300px;
     }
-    .solar-panel, .battery, .lightbulb {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      border-radius: 5px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
     .solar-panel {
-      background: linear-gradient(to bottom, #ffdd00, #ffaa00);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .solar-panel:after {
-      content: "Solar Panel";
-      font-size: 12px;
-      color: #333;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Solar_panel_icon.svg/512px-Solar_panel_icon.svg.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      width: 120px;
+      height: 120px;
     }
     .battery {
-      background: #444;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .battery-level-bar {
-      position: relative;
-      width: 50%;
-      height: 50px;
-      background: #555;
-      border: 1px solid #333;
-      border-radius: 5px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-    .battery-level-fill {
-      position: absolute;
-      height: 100%;
-      width: 50%;
-      background: #00ff00;
-      transition: width 0.5s ease;
-    }
-    .battery:after {
-      content: "Battery";
-      font-size: 12px;
-      color: white;
-      margin-top: 5px;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Battery_icon.svg/512px-Battery_icon.svg.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      width: 120px;
+      height: 120px;
     }
     .lightbulb {
-      background: #777;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: box-shadow 0.5s ease, background 0.5s ease;
-    }
-    .lightbulb:after {
-      content: "Lightbulb";
-      font-size: 12px;
-      color: #333;
+      background-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Lightbulb_icon.svg/512px-Lightbulb_icon.svg.png');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      width: 120px;
+      height: 120px;
     }
     .connection-line {
       position: absolute;
@@ -140,13 +104,6 @@
 
         // Change background and element styles
         document.body.style.backgroundColor = isDay ? '#87CEEB' : '#2C3E50';
-        document.querySelector('.solar-panel').style.opacity = isDay ? 1 : 0.5;
-
-        const lightbulb = document.querySelector('.lightbulb');
-        lightbulb.style.background = isDay ? '#777' : '#ffdd00';
-        lightbulb.style.boxShadow = isDay
-          ? 'none'
-          : '0 0 20px rgba(255, 221, 0, 0.8)';
 
         updateCovers();
         updateBatteryCharge();
