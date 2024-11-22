@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fixed Energy Animation</title>
+  <title>How an energy storage works</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,7 +14,7 @@
       align-items: center;
       height: 100vh;
       background-color: #87CEEB; /* Default to day */
-      transition: background-color 2s ease;
+      transition: background-color 3s ease;
     }
     .container {
       position: relative;
@@ -24,6 +23,7 @@
       align-items: center;
       width: 90%;
       max-width: 800px;
+      height: 300px;
     }
     .solar-panel, .battery, .lightbulb {
       position: relative;
@@ -88,37 +88,35 @@
     .connection-line {
       position: absolute;
       height: 4px;
+      background: repeating-linear-gradient(
+        to right,
+        #00ff00 0%,
+        #00ff00 10%,
+        #000 10%,
+        #000 20%
+      );
+      background-size: 50px 100%;
+      animation: currentFlow 1s linear infinite;
+    }
+    .black-cover {
+      position: absolute;
+      height: 4px;
       background: #000;
+      z-index: 2; /* Ensures the cover is above the animation */
+      display: none; /* Hidden initially */
     }
-    .solar-to-battery {
-      position: absolute;
-      top: 50%; 
-      left: 100px;
-      transform-origin: left;
-      transform: rotate(0deg);
-      width: 250px;
-    }
-    .battery-to-lightbulb {
-      position: absolute;
-      top: 50%;
-      left: 450px;
-      transform-origin: left;
-      transform: rotate(0deg);
-      width: 250px;
-    }
-    .energy-dot {
-      position: absolute;
-      width: 10px;
-      height: 10px;
-      background: #00ff00;
-      border-radius: 50%;
-      transition: opacity 0.5s ease;
-      top: 47.5%; /* Moved 2.5px higher */
+    @keyframes currentFlow {
+      from {
+        background-position: 0 0;
+      }
+      to {
+        background-position: 50px 0;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="container">
     <div class="solar-panel"></div>
     <div class="battery">
       <div class="battery-level-bar">
@@ -126,23 +124,17 @@
       </div>
     </div>
     <div class="lightbulb"></div>
-    <div class="connection-line solar-to-battery"></div>
-    <div class="connection-line battery-to-lightbulb"></div>
-    <div class="energy-dot" id="energy-dot"></div>
+    <div class="connection-line solar-to-battery" id="solar-to-battery"></div>
+    <div class="connection-line battery-to-lightbulb" id="battery-to-lightbulb"></div>
+    <div class="black-cover" id="solar-to-battery-cover"></div>
+    <div class="black-cover" id="battery-to-lightbulb-cover"></div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script>
     let isDay = true;
     let batteryCharge = 50;
-    let animationCount = 0;
+    let chargeInterval;
 
     function toggleDayNight() {
-      const energyDot = document.getElementById('energy-dot');
-
-      // Hide the dot
-      energyDot.style.opacity = '0';
-
-      // Pause for 1 second before changing styles
       setTimeout(() => {
         isDay = !isDay;
 
@@ -156,62 +148,98 @@
           ? 'none'
           : '0 0 20px rgba(255, 221, 0, 0.8)';
 
-        // Show the dot again
-        energyDot.style.opacity = '1';
+        updateCovers();
+        updateBatteryCharge();
 
-        animateEnergyFlow(); // Resume animation after the delay
-      }, 1000);
+        toggleDayNight(); // Repeat indefinitely
+      }, 3000); // 3-second delay between cycles
     }
 
-    function animateEnergyFlow() {
-      const energyDot = document.getElementById('energy-dot');
+    function updateCovers() {
+      const solarToBatteryCover = document.getElementById('solar-to-battery-cover');
+      const batteryToLightbulbCover = document.getElementById('battery-to-lightbulb-cover');
+
+      // Show or hide covers based on day or night
+      if (isDay) {
+        solarToBatteryCover.style.display = 'none';
+        batteryToLightbulbCover.style.display = 'block';
+      } else {
+        solarToBatteryCover.style.display = 'block';
+        batteryToLightbulbCover.style.display = 'none';
+      }
+    }
+
+    function updateBatteryCharge() {
       const batteryLevelFill = document.getElementById('battery-level-fill');
 
-      anime.remove(energyDot);
+      clearInterval(chargeInterval);
 
-      if (isDay) {
-        // Energy flows from solar panel to battery
-        anime({
-          targets: energyDot,
-          translateX: [100, 350],
-          easing: 'linear',
-          duration: 2000,
-          complete: () => {
-            batteryCharge = Math.min(batteryCharge + 10, 100); // Increase charge when dot reaches battery
-            batteryLevelFill.style.width = `${batteryCharge}%`;
-            checkAnimationCycle();
-          }
-        });
-      } else {
-        // Energy flows from battery to lightbulb
-        anime({
-          targets: energyDot,
-          translateX: [450, 700], // Start from battery to lightbulb
-          easing: 'linear',
-          duration: 2000,
-          begin: () => {
-            batteryCharge = Math.max(batteryCharge - 10, 0); // Decrease charge when dot leaves the battery
-            batteryLevelFill.style.width = `${batteryCharge}%`;
-          },
-          complete: () => {
-            checkAnimationCycle();
-          }
-        });
-      }
+      // Increment or decrement battery charge gradually
+      chargeInterval = setInterval(() => {
+        if (isDay) {
+          batteryCharge = Math.min(batteryCharge + 1, 100);
+        } else {
+          batteryCharge = Math.max(batteryCharge - 1, 0);
+        }
+        batteryLevelFill.style.width = `${batteryCharge}%`;
+      }, 100); // Update every 100ms for a smooth transition
     }
 
-    function checkAnimationCycle() {
-      animationCount++;
-      if (animationCount >= 3) {
-        animationCount = 0;
-        toggleDayNight(); // Toggle day/night after completing cycle
-      } else {
-        animateEnergyFlow();
-      }
+    function setConnectionLines() {
+      const container = document.getElementById('container').getBoundingClientRect();
+      const solarPanel = document.querySelector('.solar-panel').getBoundingClientRect();
+      const battery = document.querySelector('.battery').getBoundingClientRect();
+      const lightbulb = document.querySelector('.lightbulb').getBoundingClientRect();
+
+      const solarToBattery = document.getElementById('solar-to-battery');
+      const solarToBatteryCover = document.getElementById('solar-to-battery-cover');
+      const batteryToLightbulb = document.getElementById('battery-to-lightbulb');
+      const batteryToLightbulbCover = document.getElementById('battery-to-lightbulb-cover');
+
+      // Adjust Solar to Battery line and cover
+      setLineAndCover(
+        solarToBattery,
+        solarToBatteryCover,
+        solarPanel.right - container.left,
+        solarPanel.top + solarPanel.height / 2 - container.top,
+        battery.left - container.left,
+        battery.top + battery.height / 2 - container.top
+      );
+
+      // Adjust Battery to Lightbulb line and cover
+      setLineAndCover(
+        batteryToLightbulb,
+        batteryToLightbulbCover,
+        battery.right - container.left,
+        battery.top + battery.height / 2 - container.top,
+        lightbulb.left - container.left,
+        lightbulb.top + lightbulb.height / 2 - container.top
+      );
     }
 
-    // Start the animation
-    animateEnergyFlow();
+    function setLineAndCover(line, cover, x1, y1, x2, y2) {
+      const length = Math.hypot(x2 - x1, y2 - y1);
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+
+      line.style.width = `${length}px`;
+      line.style.transform = `rotate(${angle}rad)`;
+      line.style.left = `${x1}px`;
+      line.style.top = `${y1}px`;
+
+      cover.style.width = `${length}px`;
+      cover.style.transform = `rotate(${angle}rad)`;
+      cover.style.left = `${x1}px`;
+      cover.style.top = `${y1}px`;
+    }
+
+    // Adjust connection lines on resize
+    window.addEventListener('resize', setConnectionLines);
+
+    // Initialize
+    setConnectionLines();
+    updateCovers();
+    updateBatteryCharge();
+    toggleDayNight();
   </script>
 </body>
 </html>
