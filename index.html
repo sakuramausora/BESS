@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fixed Energy Animation</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #87CEEB; /* Default to day */
+      transition: background-color 2s ease;
+    }
+    .container {
+      position: relative;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 90%;
+      max-width: 800px;
+    }
+    .solar-panel, .battery, .lightbulb {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      border-radius: 5px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    .solar-panel {
+      background: linear-gradient(to bottom, #ffdd00, #ffaa00);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .solar-panel:after {
+      content: "Solar Panel";
+      font-size: 12px;
+      color: #333;
+    }
+    .battery {
+      background: #444;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .battery-level-bar {
+      position: relative;
+      width: 50%;
+      height: 50px;
+      background: #555;
+      border: 1px solid #333;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+    .battery-level-fill {
+      position: absolute;
+      height: 100%;
+      width: 50%;
+      background: #00ff00;
+      transition: width 0.5s ease;
+    }
+    .battery:after {
+      content: "Battery";
+      font-size: 12px;
+      color: white;
+      margin-top: 5px;
+    }
+    .lightbulb {
+      background: #777;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: box-shadow 0.5s ease, background 0.5s ease;
+    }
+    .lightbulb:after {
+      content: "Lightbulb";
+      font-size: 12px;
+      color: #333;
+    }
+    .connection-line {
+      position: absolute;
+      height: 4px;
+      background: #000;
+    }
+    .solar-to-battery {
+      position: absolute;
+      top: 50%; 
+      left: 100px;
+      transform-origin: left;
+      transform: rotate(0deg);
+      width: 250px;
+    }
+    .battery-to-lightbulb {
+      position: absolute;
+      top: 50%;
+      left: 450px;
+      transform-origin: left;
+      transform: rotate(0deg);
+      width: 250px;
+    }
+    .energy-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #00ff00;
+      border-radius: 50%;
+      transition: opacity 0.5s ease;
+      top: 47.5%; /* Moved 2.5px higher */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="solar-panel"></div>
+    <div class="battery">
+      <div class="battery-level-bar">
+        <div class="battery-level-fill" id="battery-level-fill"></div>
+      </div>
+    </div>
+    <div class="lightbulb"></div>
+    <div class="connection-line solar-to-battery"></div>
+    <div class="connection-line battery-to-lightbulb"></div>
+    <div class="energy-dot" id="energy-dot"></div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script>
+    let isDay = true;
+    let batteryCharge = 50;
+    let animationCount = 0;
+
+    function toggleDayNight() {
+      const energyDot = document.getElementById('energy-dot');
+
+      // Hide the dot
+      energyDot.style.opacity = '0';
+
+      // Pause for 1 second before changing styles
+      setTimeout(() => {
+        isDay = !isDay;
+
+        // Change background and element styles
+        document.body.style.backgroundColor = isDay ? '#87CEEB' : '#2C3E50';
+        document.querySelector('.solar-panel').style.opacity = isDay ? 1 : 0.5;
+
+        const lightbulb = document.querySelector('.lightbulb');
+        lightbulb.style.background = isDay ? '#777' : '#ffdd00';
+        lightbulb.style.boxShadow = isDay
+          ? 'none'
+          : '0 0 20px rgba(255, 221, 0, 0.8)';
+
+        // Show the dot again
+        energyDot.style.opacity = '1';
+
+        animateEnergyFlow(); // Resume animation after the delay
+      }, 1000);
+    }
+
+    function animateEnergyFlow() {
+      const energyDot = document.getElementById('energy-dot');
+      const batteryLevelFill = document.getElementById('battery-level-fill');
+
+      anime.remove(energyDot);
+
+      if (isDay) {
+        // Energy flows from solar panel to battery
+        anime({
+          targets: energyDot,
+          translateX: [100, 350],
+          easing: 'linear',
+          duration: 2000,
+          complete: () => {
+            batteryCharge = Math.min(batteryCharge + 10, 100); // Increase charge when dot reaches battery
+            batteryLevelFill.style.width = `${batteryCharge}%`;
+            checkAnimationCycle();
+          }
+        });
+      } else {
+        // Energy flows from battery to lightbulb
+        anime({
+          targets: energyDot,
+          translateX: [450, 700], // Start from battery to lightbulb
+          easing: 'linear',
+          duration: 2000,
+          begin: () => {
+            batteryCharge = Math.max(batteryCharge - 10, 0); // Decrease charge when dot leaves the battery
+            batteryLevelFill.style.width = `${batteryCharge}%`;
+          },
+          complete: () => {
+            checkAnimationCycle();
+          }
+        });
+      }
+    }
+
+    function checkAnimationCycle() {
+      animationCount++;
+      if (animationCount >= 3) {
+        animationCount = 0;
+        toggleDayNight(); // Toggle day/night after completing cycle
+      } else {
+        animateEnergyFlow();
+      }
+    }
+
+    // Start the animation
+    animateEnergyFlow();
+  </script>
+</body>
+</html>
