@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -127,6 +128,7 @@
     <div class="lightbulb"></div>
     <div class="connection-line solar-to-battery"></div>
     <div class="connection-line battery-to-lightbulb"></div>
+    <div class="energy-dot" id="energy-dot"></div>
   </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script>
@@ -134,27 +136,17 @@
     let batteryCharge = 50;
     let animationCount = 0;
 
-    function createEnergyDots(count) {
-      const container = document.querySelector('.container');
-      const dots = [];
-      for (let i = 0; i < count; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'energy-dot';
-        dot.style.opacity = '0';
-        container.appendChild(dot);
-        dots.push(dot);
-      }
-      return dots;
-    }
-
-    const energyDots = createEnergyDots(5); // Create multiple dots
-
     function toggleDayNight() {
-      energyDots.forEach(dot => (dot.style.opacity = '0')); // Hide all dots
+      const energyDot = document.getElementById('energy-dot');
 
+      // Hide the dot
+      energyDot.style.opacity = '0';
+
+      // Pause for 1 second before changing styles
       setTimeout(() => {
         isDay = !isDay;
 
+        // Change background and element styles
         document.body.style.backgroundColor = isDay ? '#87CEEB' : '#2C3E50';
         document.querySelector('.solar-panel').style.opacity = isDay ? 1 : 0.5;
 
@@ -164,69 +156,62 @@
           ? 'none'
           : '0 0 20px rgba(255, 221, 0, 0.8)';
 
-        energyDots.forEach(dot => (dot.style.opacity = '1')); // Show dots again
+        // Show the dot again
+        energyDot.style.opacity = '1';
 
-        animateEnergyFlow();
+        animateEnergyFlow(); // Resume animation after the delay
       }, 1000);
     }
 
     function animateEnergyFlow() {
+      const energyDot = document.getElementById('energy-dot');
       const batteryLevelFill = document.getElementById('battery-level-fill');
 
-      energyDots.forEach((dot, index) => {
-        anime.remove(dot);
+      anime.remove(energyDot);
 
-        const delay = index * 200; // Stagger animations
-
-        if (isDay) {
-          anime({
-            targets: dot,
-            translateX: [100, 350],
-            easing: 'linear',
-            duration: 2000,
-            delay,
-            complete: () => {
-              if (index === energyDots.length - 1) {
-                batteryCharge = Math.min(batteryCharge + 10, 100);
-                batteryLevelFill.style.width = `${batteryCharge}%`;
-                checkAnimationCycle();
-              }
-            },
-          });
-        } else {
-          anime({
-            targets: dot,
-            translateX: [450, 700],
-            easing: 'linear',
-            duration: 2000,
-            delay,
-            begin: () => {
-              if (index === 0) {
-                batteryCharge = Math.max(batteryCharge - 10, 0);
-                batteryLevelFill.style.width = `${batteryCharge}%`;
-              }
-            },
-            complete: () => {
-              if (index === energyDots.length - 1) {
-                checkAnimationCycle();
-              }
-            },
-          });
-        }
-      });
+      if (isDay) {
+        // Energy flows from solar panel to battery
+        anime({
+          targets: energyDot,
+          translateX: [100, 350],
+          easing: 'linear',
+          duration: 2000,
+          complete: () => {
+            batteryCharge = Math.min(batteryCharge + 10, 100); // Increase charge when dot reaches battery
+            batteryLevelFill.style.width = `${batteryCharge}%`;
+            checkAnimationCycle();
+          }
+        });
+      } else {
+        // Energy flows from battery to lightbulb
+        anime({
+          targets: energyDot,
+          translateX: [450, 700], // Start from battery to lightbulb
+          easing: 'linear',
+          duration: 2000,
+          begin: () => {
+            batteryCharge = Math.max(batteryCharge - 10, 0); // Decrease charge when dot leaves the battery
+            batteryLevelFill.style.width = `${batteryCharge}%`;
+          },
+          complete: () => {
+            checkAnimationCycle();
+          }
+        });
+      }
     }
 
     function checkAnimationCycle() {
       animationCount++;
       if (animationCount >= 3) {
         animationCount = 0;
-        toggleDayNight();
+        toggleDayNight(); // Toggle day/night after completing cycle
       } else {
         animateEnergyFlow();
       }
     }
 
-    animateEnergyFlow(); // Start animation
+    // Start the animation
+    animateEnergyFlow();
   </script>
 </body>
 </html>
